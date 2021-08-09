@@ -41,13 +41,60 @@ class Trace {
     return reverse([...this.ts]).find(t => cond(t))
   }
 
-  memValueAt(loc) {
+  memValueAt(loc) { // 调用2次
+    /*
+    loc
+    [ 'const', BN { negative: 0, words: [ 64, 0 ], length: 1, red: null } ]
+    */
     assert(loc && loc[0] == 'const')
     const r = this.find(({ t }) => {
+      // console.log(t[4][1])  // BN对象
+      /*
+      t
+      [
+        'symbol',
+        'MSTORE',
+        [ 'const', BN { negative: 0, words: [ 64, 0 ], length: 1, red: null } ],
+        [ 'const', BN { negative: 0, words: [ 128, 0 ], length: 1, red: null } ],
+        [ 'const', BN { negative: 0, words: [ 32 ], length: 1, red: null } ]
+      ]
+      */
       const [_, name, targetLoc, value] = t
+      /*
+      console.log(targetLoc)
+      console.log(value)
+      [ 'const', BN { negative: 0, words: [ 64, 0 ], length: 1, red: null } ]
+      [
+        'const',
+        BN { negative: 0, words: [ 128, 0 ], length: 1, red: null }
+      ]
+      */
       return name == 'MSTORE' && targetLoc[0] == 'const' && targetLoc[1].eq(loc[1])
     })
+    /*
+    r
+    {
+      pc: 4,
+      t: [
+        'symbol',
+        'MSTORE',
+        [ 'const', BN { negative: 0, words: [ 64, 0 ], length: 1, red: null } ],
+        [ 'const', BN { negative: 0, words: [ 128, 0 ], length: 1, red: null } ],
+        [ 'const', BN { negative: 0, words: [ 32 ], length: 1, red: null } ]
+      ],
+      epIdx: 2,
+      vTrackingPos: 0,
+      kTrackingPos: 1
+    }
+    */
     if (r) return r.t[3]
+    /*
+    r.t[3]
+    [
+      'const',
+      BN { negative: 0, words: [ 128, 0 ], length: 1, red: null }
+    ]
+    */
     assert(false, `Access to uninitialized memory location: 0x${loc[1].toString(16)}`)
   }
 

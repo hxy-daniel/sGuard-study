@@ -15,26 +15,45 @@ class Evm {
     this.decoder = decoder
     this.endPoints = []
     this.jumpis = new Set()
+    this.counter = 0
   }
 
   start() {
     const { stats: { njumpis } } = this.decoder
     this.execute()
     return {
-      endPoints: this.endPoints,
-      njumpis: njumpis || 0,
-      cjumpis: this.jumpis.size,
+      endPoints: this.endPoints,  // STOP操作时 [ep.clone()]
+      njumpis: njumpis || 0,   // JUMPI的数量
+      cjumpis: this.jumpis.size,  //[pc]的数量
     }
   }
 
   execute() {
-    const execStack = [ { pc: 0, ep: new Ep() } ]
+    const execStack = [ { pc: 0, ep: new Ep() } ] // ep [{ stack, trace, opcode, pc }]
+    
     while (execStack.length) {
-      let { pc, ep } = execStack.pop()
+      // console.log(execStack.length) // 1 2 3 2 3 2 2 3 3 2 2 1
+      // this.counter++
+      let { pc, ep } = execStack.pop()  // ep [{ stack, trace, opcode, pc }]
       let { stack, trace } = ep
       let isReturned = false
 
       let iters = 0
+      /*
+      ep.boundary
+      {}  第1次调用
+      { '11': 2 } 2
+      { '11': 2, '62': 2 }  3
+      { '11': 2, '62': 2 }  ...
+      { '11': 2, '62': 2, '74': 2 }
+      { '11': 2, '62': 2, '74': 2 }
+      { '11': 2, '62': 2, '74': 2 }
+      { '11': 2, '62': 2, '74': 2, '120': 2 }
+      { '11': 2, '62': 2, '74': 2, '120': 2 }
+      { '11': 2, '62': 2, '74': 2, '120': 2 }
+      { '11': 2, '62': 2, '74': 2, '120': 2 } ...
+      { '11': 2 } 12
+      */
       if (!isEmpty(ep.boundary)) {
         iters = Math.max.apply(null, Object.values(ep.boundary))
       }

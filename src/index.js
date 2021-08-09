@@ -49,12 +49,12 @@ forEach(jsonOutput.contracts, (contractJson, full) => { // 遍历合约列表 fu
   rawBin = rawBin.slice(0, -auxdata.length) // 获取rawBin除后部分auxdata的前部分
   const bin = Buffer.from(rawBin, 'hex')  // 整理数据格式 <Buffer 60 80 60 40 52 60 04 36 10 60 3f 57 60 00 35 7c 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 90 04 63 ff ff ... 166 more bytes>
   const decoder = new Decoder(bin)  // Decoder { stats: { njumpis: 4, nexts: 1, pc: 216 } }
-  const { stats: { nexts } } = decoder  // 获取操作码中是CALL操作码的数量 待进一步研究Decoder函数☆☆☆
-  process.send && process.send({  // 向父进程发送信息
+  const { stats: { nexts } } = decoder  // 获取操作码中是CALL操作码的数量"1" 待进一步研究Decoder函数☆☆☆
+  process.send && process.send({  // 向父进程发送信息?
     contract: { name },
     duration: { runAt: Date.now() },
   })
-  if (nexts == 0) process.exit() 
+  if (nexts == 0) process.exit()  // ?
   const evm = new Evm(bin, decoder)
   const srcmap = new SRCMap(contractJson['srcmap-runtime'] || '0:0:0:0', source, bin)
   const { endPoints, njumpis, cjumpis } = evm.start()
