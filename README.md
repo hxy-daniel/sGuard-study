@@ -1,6 +1,5 @@
-## 1. Getting started
-(Linux)
-
+# Getting started(Linux)
+## 1.Clone the project
 Clone the project to `project_folder/` and install dependencies
 
 ```bash
@@ -8,6 +7,7 @@ cd project_folder/
 npm install && mkdir contracts/
 ```
 
+## 2.Place the contract
 Place the following contract to `contracts/sample.sol`
 ```solidity
 // contracts/sample.sol
@@ -28,10 +28,9 @@ contract Fund {
   }
 }
 ```
+## 3.Install Python3
 
-安装Python3
-
-安装solc-select:
+## 4.Install solc-select
 ```shell
 pip3 install solc-select
 
@@ -40,6 +39,7 @@ solc-select install 0.4.26
 solc-select use 0.4.26
 ```
 
+## 5.Run test
 Run `npm run dev` to patch `sample.sol`. The fixed file is `contracts/fixed.sol`
 
 ```solidity
