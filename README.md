@@ -1,4 +1,5 @@
 ## 1. Getting started
+(Linux)
 
 Clone the project to `project_folder/` and install dependencies
 
@@ -27,6 +28,18 @@ contract Fund {
   }
 }
 ```
+
+安装Python3
+
+安装solc-select:
+```shell
+pip3 install solc-select
+
+solc-select install 0.4.26
+
+solc-select use 0.4.26
+```
+
 Run `npm run dev` to patch `sample.sol`. The fixed file is `contracts/fixed.sol`
 
 ```solidity
