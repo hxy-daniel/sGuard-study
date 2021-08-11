@@ -20,7 +20,7 @@ class Stack {
     return this.st.pop()
   }
 
-  popN(n) {
+  popN(n) { // n:指令输入参数个数ins
     assert(n > 0)
     assert(this.st.length >= n)
     return this.st.splice(-n).reverse()

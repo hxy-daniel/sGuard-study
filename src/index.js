@@ -19,6 +19,7 @@ if (process.send) { // undefined
   fixedFile = d.fixedFile
   jsonFile = d.jsonFile
 } else {
+  // asm(汇编码) solc可以输出函数签名--hashes
   const { code } = shell.exec(`solc --combined-json bin-runtime,srcmap-runtime,ast,asm ${contractFile} > ${jsonFile}`)
   if (code != 0) {
     console.log(`[+] Failed to compile`)
@@ -35,7 +36,7 @@ const sourceIndex = jsonOutput.sourceList[0]  // "contracts/sample.sol"
 const { AST } = jsonOutput.sources[sourceIndex] // 从sources数组中获取索引为"contracts/sample.sol"的AST
 const { children } = AST
 const { attributes: { name } } = children[children.length - 1]  //从AST的children中获取合约的名字"Fund" -- "Contract Fund" 如果有多个合约名字name呢？只取最后一个？只考虑了一个合约的情况？
-addFunctionSelector(AST)  // 如果有函数，则在AST对应函数attributes中存放functionSelector，值为main(uint256)的16进制hash的前8位，否则值为"fallback"
+addFunctionSelector(AST)  // 函数签名：如果有函数，则在AST对应函数attributes中存放functionSelector，值为main(uint256)的16进制hash的前8位，否则值为"fallback"
 
 // console.log(AST.children[1].children[3].attributes.functionSelector)  // "ab3ae255"
 
@@ -49,15 +50,15 @@ forEach(jsonOutput.contracts, (contractJson, full) => { // 遍历合约列表 fu
   rawBin = rawBin.slice(0, -auxdata.length) // 获取rawBin除后部分auxdata的前部分
   const bin = Buffer.from(rawBin, 'hex')  // 整理数据格式 <Buffer 60 80 60 40 52 60 04 36 10 60 3f 57 60 00 35 7c 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 90 04 63 ff ff ... 166 more bytes>
   const decoder = new Decoder(bin)  // Decoder { stats: { njumpis: 4, nexts: 1, pc: 216 } }
-  const { stats: { nexts } } = decoder  // 获取操作码中是CALL操作码的数量"1" 待进一步研究Decoder函数☆☆☆
+  const { stats: { nexts } } = decoder  // 获取操作码中是除PUSH、JUMPI外其他6个操作码的数量"1"
   process.send && process.send({  // 向父进程发送信息?
     contract: { name },
     duration: { runAt: Date.now() },
   })
-  if (nexts == 0) process.exit()  // ?
+  if (nexts == 0) process.exit()  // ?没有其他6个操作码，没有bug，不需要修补？
   const evm = new Evm(bin, decoder)
   const srcmap = new SRCMap(contractJson['srcmap-runtime'] || '0:0:0:0', source, bin)
-  const { endPoints, njumpis, cjumpis } = evm.start()
+  const { endPoints, njumpis, cjumpis } = evm.start() // njumpis=cjumpis，都是JUMPI时++
   process.send && process.send({ 
     contract: { name: contractName },
     sevm: { paths: endPoints.length, njumpis, cjumpis },

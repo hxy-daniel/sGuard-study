@@ -8,7 +8,7 @@ const Trace = require('./trace')
 
 class Ep {
   constructor() {
-    this.ep = []
+    this.ep = []  // [{ stack, trace, opcode, pc }, { stack2, trace2, opcode2, pc2 }]
     this.boundary = {}
     this.stack = new Stack() 
     this.trace = new Trace()

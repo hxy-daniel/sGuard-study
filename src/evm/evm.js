@@ -1,4 +1,4 @@
-const BN = require('bn.js')
+const BN = require('bn.js') //  大数计算
 const { isEmpty } = require('lodash')
 const utils = require('ethereumjs-util')
 const assert = require('assert')
@@ -13,7 +13,7 @@ class Evm {
   constructor(bin, decoder) {
     this.bin = bin
     this.decoder = decoder
-    this.endPoints = []
+    this.endPoints = [] // 即ep (论文中的最大symbol trace)即最后一个操作码为'REVERT、INVALID、SELFDESTRUCT、RETURN、STOP'时的ep数组
     this.jumpis = new Set()
     this.counter = 0
   }
@@ -24,21 +24,23 @@ class Evm {
     return {
       endPoints: this.endPoints,  // STOP操作时 [ep.clone()]
       njumpis: njumpis || 0,   // JUMPI的数量
-      cjumpis: this.jumpis.size,  //[pc]的数量
+      cjumpis: this.jumpis.size,  // [JUMPI时的pc]，JUMPI操作的数量
     }
   }
 
   execute() {
-    const execStack = [ { pc: 0, ep: new Ep() } ] // ep [{ stack, trace, opcode, pc }]
+    const execStack = [ { pc: 0, ep: new Ep() } ] // Ep.ep [{ stack, trace, opcode, pc }]
     
     while (execStack.length) {
       // console.log(execStack.length) // 1 2 3 2 3 2 2 3 3 2 2 1
       // this.counter++
-      let { pc, ep } = execStack.pop()  // ep [{ stack, trace, opcode, pc }]
+      let { pc, ep } = execStack.pop()  // EP.ep [{ stack, trace, opcode, pc }]
       let { stack, trace } = ep
       let isReturned = false
 
       let iters = 0
+
+      // console.log(ep.ep)
       /*
       ep.boundary
       {}  第1次调用
@@ -66,11 +68,12 @@ class Evm {
         if (!opcode) break
         const { name, ins, outs } = opcode
         ep.add({ opcode: { ...opcode, opVal: this.bin[pc] }, pc })
+        
         switch (name) {
-          case 'PUSH': {
-            const dataLen = this.bin[pc] - 0x5f
-            const data = this.bin.slice(pc + 1, pc + 1 + dataLen).toString('hex')
-            stack.push(['const', new BN(data, 16)])
+          case 'PUSH': {  // 为考虑PUSH2-PUSH32
+            const dataLen = this.bin[pc] - 0x5f // ? 96 - 95 = 1
+            const data = this.bin.slice(pc + 1, pc + 1 + dataLen).toString('hex') // bin:[96(PUSH), 128(80), ...]获取PUSH操作后的数据值（128->80 十进制转十六进制）
+            stack.push(['const', new BN(data, 16)]) // ep.stack存16进制大数
             pc += dataLen
             break
           }
@@ -170,12 +173,12 @@ class Evm {
             break
           }
           case 'MSTORE': {
-            const [memLoc, memValue] = stack.popN(ins)
+            const [memLoc, memValue] = stack.popN(ins)  // ins=2,弹出2个元素+反转：位置，值
             const size = ['const', new BN(32)]
-            const vTrackingPos = stack.size() - 1 + 1
-            const kTrackingPos = stack.size() - 1 + 2
+            const vTrackingPos = stack.size() - 1 + 1 // ep.stack大小
+            const kTrackingPos = stack.size() - 1 + 2 // ep.stack大小+1
             const epIdx = ep.size() - 1
-            if (memLoc[0] == 'const' && memLoc[1].eq(new BN(0x40))) {
+            if (memLoc[0] == 'const' && memLoc[1].eq(new BN(0x40))) { // ?
               if (memValue[0] != 'const') {
                 const lastValue = trace.memValueAt(memLoc) 
                 assert(lastValue[0] == 'const')
