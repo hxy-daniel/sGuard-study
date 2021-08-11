@@ -86,7 +86,7 @@ class Evm {
             break
           }
           case 'JUMPI': {
-            const [label, cond] = stack.popN(ins)
+            const [label, cond] = stack.popN(ins) // 未使用条件进行跳转
             assert(label[0] == 'const')
             const jumpdest = label[1].toNumber()
             this.jumpis.add(pc)
@@ -137,7 +137,7 @@ class Evm {
           case 'CALLDATASIZE':
           case 'SELFBALANCE':
           case 'RETURNDATASIZE': {
-            const epSize = ['const', new BN(ep.size())]
+            const epSize = ['const', new BN(ep.size())] // 这些值都统一暂设为当前ep[]的数量(ep.size)
             stack.push(['symbol', name, epSize])
             break
           }
@@ -146,23 +146,24 @@ class Evm {
           case 'EXTCODEHASH':
           case 'BLOCKHASH': {
             const epSize = ['const', new BN(ep.size())]
-            stack.push(['symbol', name, stack.pop(), epSize])
+            stack.push(['symbol', name, stack.pop(), epSize]) // 这些值都统一暂设为当前ep[]的数量(ep.size)(注意存了stack.pop())
             break
           }
-          case 'CALLDATALOAD': {
+          case 'CALLDATALOAD': {  // ins: 1, outs: 1
             const dataOffset = stack.pop()
             const size = ['const', new BN(32)]
             if (dataOffset[0] == 'const') {
               const offset = dataOffset[1].toNumber()
-              if (offset == 0 || (offset - 4) % 0x20 == 0) {
+              if (offset == 0 || (offset - 4) % 0x20 == 0) {  // 为什么要-4？
                 stack.push(['symbol', name, dataOffset, size])
                 break
               }
             }
-            stack.push(['const', new BN('02', 16)])
+            stack.push(['const', new BN('02', 16)]) // 为什么存02？
             break
           }
-          case 'CALLDATACOPY': {
+          // 测试合约不执行
+          case 'CALLDATACOPY': {  // ins: 3, outs: 0  calldatacopy(t/memLoc, f/dataOffset, s/dataLength)从calldata的f位置复制s字节到mem的t位置
             const [memLoc, dataOffset, dataLength] = stack.popN(ins)
             const memValue = ['symbol', 'CALLDATALOAD', dataOffset, dataLength]
             const t = ['symbol', 'MSTORE', memLoc, memValue, dataLength]
@@ -179,16 +180,16 @@ class Evm {
             const kTrackingPos = stack.size() - 1 + 2 // ep.stack大小+1
             const epIdx = ep.size() - 1
             if (memLoc[0] == 'const' && memLoc[1].eq(new BN(0x40))) { // ?
-              if (memValue[0] != 'const') {
+              if (memValue[0] != 'const') { // memValue不是const则处理后存储
                 const lastValue = trace.memValueAt(memLoc) 
                 assert(lastValue[0] == 'const')
-                const v = ['const', new BN(lastValue[1].add(new BN('a0', 16)))]
+                const v = ['const', new BN(lastValue[1].add(new BN('a0', 16)))] // ？存放原来的值+a0?
                 const t = ['symbol', name, memLoc, v, size]
                 trace.add({ t, pc, epIdx, vTrackingPos, kTrackingPos })
                 break
               }
             }
-            const t = ['symbol', name, memLoc, memValue, size]
+            const t = ['symbol', name, memLoc, memValue, size]  // memValue是const则直接存储
             trace.add({ t, pc, epIdx, vTrackingPos, kTrackingPos })
             break
           }
@@ -197,11 +198,12 @@ class Evm {
             const size = ['const', new BN(32)]
             const traceSize = ['const', new BN(trace.size())]
             const epSize = ['const', new BN(ep.size())]
-            if (memLoc[0] == 'const' && memLoc[1].eq(new BN(0x40))) {
+            if (memLoc[0] == 'const' && memLoc[1].eq(new BN(0x40))) { // 为什么是0x40？只是为了测试合约而写？
               stack.push(trace.memValueAt(memLoc))
               break
             }
-            stack.push(['symbol', name, memLoc, size, traceSize, epSize])
+            // 此合约不执行
+            stack.push(['symbol', name, memLoc, size, traceSize, epSize]) // 即使操作数是具体的，MLOAD？/SLOAD是符号值，维护内存或存储器的具体内容并非易事。例如，从storage中加载地址0x00中的值将产生符号值SLOAD(0x00)，将storage地址0x00处的值增加6将产生符号值ADD(SLOAD(0x00),0x06)。
             break
           }
           case 'SSTORE': {
@@ -217,7 +219,7 @@ class Evm {
             const storageLoc = stack.pop()
             const traceSize = ['const', new BN(trace.size())]
             const epSize = ['const', new BN(ep.size())]
-            stack.push(['symbol', name, storageLoc, traceSize, epSize])
+            stack.push(['symbol', name, storageLoc, traceSize, epSize]) // 即使操作数是具体的，MLOAD/SLOAD是符号值，维护内存或存储器的具体内容并非易事。例如，从storage中加载地址0x00中的值将产生符号值SLOAD(0x00)，将storage地址0x00处的值增加6将产生符号值ADD(SLOAD(0x00),0x06)。
             break
           }
           case 'ISZERO': {
@@ -229,7 +231,7 @@ class Evm {
             }
             break
           }
-          case 'SHL': {
+          case 'SHL': { // 逻辑左移
             const [x, y] = stack.popN(ins)
             if (x[0] != 'const' || y[0] != 'const') {
               stack.push(['symbol', name, x, y])
@@ -243,7 +245,7 @@ class Evm {
             }
             break
           }
-          case 'SHR': {
+          case 'SHR': { // 逻辑右移
             const [x, y] = stack.popN(ins)
             if (x[0] != 'const' || y[0] != 'const') {
               stack.push(['symbol', name, x, y])
@@ -311,7 +313,7 @@ class Evm {
             if (x[0] != 'const' || y[0] != 'const') {
               stack.push(['symbol', name, x, y, epSize])
             } else {
-              stack.push(['const', x[1].mul(y[1]).mod(TWO_POW256)])
+              stack.push(['const', x[1].mul(y[1]).mod(TWO_POW256)]) // 为什么要mod?
             }
             break
           }
@@ -321,7 +323,7 @@ class Evm {
             if (x[0] != 'const' || y[0] != 'const') {
               stack.push(['symbol', name, x, y, epSize])
             } else {
-              stack.push(['const', x[1].sub(y[1]).toTwos(256)])
+              stack.push(['const', x[1].sub(y[1]).toTwos(256)]) // 转换为二进制补码表示，其中256为位宽
             }
             break
           }
@@ -331,7 +333,7 @@ class Evm {
             if (x[0] != 'const' || y[0] != 'const') {
               stack.push(['symbol', name, x, y, epSize])
             } else {
-              stack.push(['const', x[1].add(y[1]).mod(TWO_POW256)])
+              stack.push(['const', x[1].add(y[1]).mod(TWO_POW256)]) // 为什么要mod?
             }
             break
           }
@@ -386,10 +388,10 @@ class Evm {
               if (y[1].isZero()) {
                 stack.push(y)
               } else {
-                const a = x[1].fromTwos(256)
+                const a = x[1].fromTwos(256)  // 从二进制的补码表示转换
                 const b = y[1].fromTwos(256)
                 let r = a.abs().mod(b.abs())
-                if (a.isNeg()) {
+                if (a.isNeg()) {  // 是否是负数
                   r = r.ineg()
                 }
                 r = r.toTwos(256)
@@ -416,12 +418,12 @@ class Evm {
             const [x, y] = stack.popN(ins)
             const traceSize = ['const', new BN(trace.size())]
             const epSize = ['const', new BN(ep.size())]
-            const mload = ['symbol', 'MLOAD', x, y, traceSize, epSize]
+            const mload = ['symbol', 'MLOAD', x, y, traceSize, epSize]  // 符号执行SHA3(n,p)的结果是SHA3(MLOAD(n,p))，内存中从地址n到n+p的值的SHA3散列。
             assert(x[0] == 'const')
-            stack.push(['symbol', name, mload])
+            stack.push(['symbol', name, mload]) // 注意是符号值
             break
           }
-          case 'CODESIZE': {
+          case 'CODESIZE': {  // 当前合约/执行上下文的代码大小
             stack.push(['const', new BN(this.bin.length)])
             break
           }
@@ -493,7 +495,7 @@ class Evm {
             break
           }
           case 'CALLCODE':
-          case 'CALL': {
+          case 'CALL': {  // 比DELEGATECALL多一个value
             const [
               gasLimit,
               toAddress,
@@ -509,7 +511,7 @@ class Evm {
             stack.push(['symbol', name, gasLimit, toAddress, value, mload, outOffset, outLength])
             break
           }
-          case 'CREATE': {
+          case 'CREATE': {  // 使用代码 mem[p..(p+s)) 创建新合约并发送 v wei 并返回新地址
             const [
               value,
               inOffset,

@@ -216,3 +216,23 @@
   "214": 86,
   "215": 0,
 }
+
+execStack:[ { pc: 0, ep: new Ep() } ]
+第一次循环  { pc: 0, ep: new Ep() }   execStack[ ]
+
+  pc    操作码          值      stack
+  0     PUSH            128     [128]
+  2     PUSH            64      [128, 64]
+  4     MSTORE                  []    
+  5     PUSH            4       [4]
+  7     CALLDATASIZE            [const(4), symbol(5)]
+  8     LT                      [["symbol", "LT", symbol(5), const(4)]]
+  9     PUSH            63      [["symbol", "LT", symbol(5), const(4)], const(63)]
+  11    JUMPI                   []                                                  jumpis:[11]   execStack:[{pc:63, ep[①8个]}, {pc:12, ep[①8个]}]
+
+第二次循环  {pc:12, ep[①8个]} execStack:[{pc:63, ep[①8个]}]
+  12    PUSH
+  ...   execStack:[{pc:63, ep[①8个]}, {pc:68, ep[①8个+②12个]}, {pc:63, ep[①8个+②12个]}]
+
+即得到每个执行路径（'REVERT、INVALID、SELFDESTRUCT、RETURN、STOP'结束）的状态等（ep）信息
+

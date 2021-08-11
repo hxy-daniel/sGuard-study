@@ -11,7 +11,7 @@ class Ep {
     this.ep = []  // [{ stack, trace, opcode, pc }, { stack2, trace2, opcode2, pc2 }]
     this.boundary = {}
     this.stack = new Stack() 
-    this.trace = new Trace()
+    this.trace = new Trace()  // (存储相关时)操作码为CALLDATACOPY、MSTORE、SSTORE、RETURNDATACOPY(从returndata的f位置复制s个字节到mem的t位置)时添加
   }
 
   clear() {
@@ -46,10 +46,10 @@ class Ep {
     return ep
   }
 
-  distance(pc) {
+  distance(pc) {  // pc为JUMPI的pc(序号)
     let jp = 0 // jumpi
-    let ams = new Set() // assignment
-    let coveredJp = new Set([pc]) // nested jumpi
+    let ams = new Set() // assignment 赋值
+    let coveredJp = new Set([pc]) // nested jumpi 嵌套JUMPI
 
     // default boundary = 2
     if (!this.boundary[pc]) this.boundary[pc] = 2
