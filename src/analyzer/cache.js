@@ -82,6 +82,7 @@ class Cache {
             this.stats.success.mloads ++;
           } catch (e) {
             // console.error(e)
+            // 多余？
             const variable = new BlindVariable()
             mloads.push(variable)
             /// MLOAD Loc 
@@ -111,6 +112,7 @@ class Cache {
             this.stats.success.sloads ++;
           } catch (e) {
             // console.error(e)
+            // 多余？
             const subEpSize = symbol[4][1].toNumber()
             const subEp = endPoint.sub(subEpSize)
             const variable = new BlindVariable()
@@ -162,10 +164,10 @@ class Cache {
           'MSTORE': [LocalVariable, mstore],
           'SSTORE': [StateVariable, sstore],
         }
-        const [_, name, loc, value] = t
+        const [_, name, loc, value] = t // loc:const   value:const/symbol
         if (entries[name]) {
           try {
-            const [ Variable, store ] = entries[name]
+            const [ Variable, store ] = entries[name] // Variable子类, mstore/store
             const storedKey = this.analyzeExp(loc, kTrackingPos, endPoint, epIdx)
             const storedValue = this.analyzeExp(value, vTrackingPos, endPoint, epIdx)
             const sloads = [...storedKey.sloads, ...storedValue.sloads]
@@ -181,7 +183,8 @@ class Cache {
               this.stats.success.sstores ++
             }
           } catch (e) {
-            // console.error(e)
+            console.error(e)
+            // 多余？
             const [ Variable, store ] = entries[name]
             const storedKey = this.analyzeExp(loc, kTrackingPos, endPoint, epIdx)
             const storedValue = this.analyzeExp(value, vTrackingPos, endPoint, epIdx)
