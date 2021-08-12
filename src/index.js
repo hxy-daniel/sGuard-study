@@ -66,8 +66,8 @@ forEach(jsonOutput.contracts, (contractJson, full) => { // 遍历合约列表 fu
     patch : { origin: { bytecodes: rawBin.length, lines } } 
   })
   /* Dependency */
-  const condition = new Condition(endPoints)
-  const cache = new Cache(condition, endPoints, srcmap)
+  const condition = new Condition(endPoints)  // 获取节点/前后/支配/控制关系
+  const cache = new Cache(condition, endPoints, srcmap) // 处理计算mem/成功失败stats数据
   process.send && process.send({ duration: { dependencyAt: Date.now() } })
   const scanner = new Scanner(cache, srcmap, AST)
   const uncheckOperands = scanner.scan()

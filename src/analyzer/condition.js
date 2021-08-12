@@ -8,7 +8,7 @@ class Condition {
     this.start = 0
     this.end = 100000
     this.buildGraph(endPoints)
-    this.computeDominators()
+    this.computeDominators()  // worklist算法计算支配集 TODO:选择更好的算法
     this.computeControls()
   }
 
@@ -61,7 +61,7 @@ class Condition {
         start: this.end,
       }
     ]
-    // 支配/后支配
+    // 支配/后支配 0开始，然后10000开始 后支配等同于支配？
     const [dominators, postdominators] = trees.map(({ start, predecessors, successors, nodes }) => {
       const dominators = {}
       nodes.forEach(node => dominators[node] = nodes) // 全赋值为nodes
@@ -69,12 +69,12 @@ class Condition {
       while (workList.length > 0) {
         const node = workList.pop()
         const preds = predecessors[node] || []
-        const pdominators = intersection.apply(intersection, preds.map(p => dominators[p])) // ？值就是nodes
-        const ndominators = union([node], pdominators)  // ? 值就是nodes
-        if (ndominators.join('') != dominators[node].join('')) {
-          dominators[node] = ndominators
+        const pdominators = intersection.apply(intersection, preds.map(p => dominators[p])) // node的前继的dominators
+        const ndominators = union([node], pdominators)  // 将node与node的前继的dominators合并成new dominators  
+        if (ndominators.join('') != dominators[node].join('')) {  // 新的支配集不等于原来的则替换
+          dominators[node] = ndominators  // 替换
           const succs = successors[node]
-          workList = union(workList, succs)
+          workList = union(workList, succs) // 将后继添加到worklist中
         }
       }
       return dominators // 把支配赋值给后支配？
@@ -89,14 +89,14 @@ class Condition {
       const succs = this.successors[node] || []
       return {
         node,
-        iters: intersection.apply(intersection, succs.map(s => this.postdominators[s])),
-        unios: union.apply(union, succs.map(s => this.postdominators[s]))
+        iters: intersection.apply(intersection, succs.map(s => this.postdominators[s])),  // node的所有后继的后支配取交集
+        unios: union.apply(union, succs.map(s => this.postdominators[s])) // node的所有后继的后支配取并集去重
       }
     })
     this.nodes.forEach(node => {
       if (node == this.start) return
       toPairs(domDict).forEach(([_, { node: onode, iters, unios }]) => {
-        if (!iters.includes(node) && unios.includes(node)) {
+        if (!iters.includes(node) && unios.includes(node)) {  // 全控制：交集内并集外
           !this.fullControls[node] && (this.fullControls[node] = [])
           this.fullControls[node].push(onode)
         }
