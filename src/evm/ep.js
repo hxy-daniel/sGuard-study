@@ -38,7 +38,7 @@ class Ep {
   sub(epSize) {
     assert(epSize >= 0)
     assert(epSize <= this.ep.length)
-    const ep = new Ep()
+    const ep = new Ep() // 未复制boundary
     ep.ep = this.ep.slice(0, epSize)
     const { stack, trace } = ep.ep[ep.ep.length - 1]
     ep.stack = stack.clone()

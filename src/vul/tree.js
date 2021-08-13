@@ -14,7 +14,7 @@ class Tree {
     return [endPointIdx, epIdx].join(':')
   }
 
-  build(endPointIdx, epIdx, value) {
+  build(endPointIdx, epIdx, value) {  // 大ep索引，小ep索引，ep的calls的值
     const stack = [
       { 
         directParent: this.root,

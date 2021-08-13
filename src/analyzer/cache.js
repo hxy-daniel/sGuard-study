@@ -8,7 +8,7 @@ class Cache {
   constructor(condition, endPoints, srcmap) {
     this.condition = condition
     this.endPoints = endPoints
-    this.srcmap = srcmap
+    this.srcmap = srcmap  // 未使用，考虑删除
     this.stats = {
       failed: {
         sloads: 0,
@@ -37,13 +37,13 @@ class Cache {
           marker.fullControl = this.condition.fullControls[pc] || []
           marker.found = marker.fullControl.length > 0
         }
-        if (marker.fullControl.includes(pc)) {
+        if (marker.fullControl.includes(pc)) {  // 什么意思？全控制本身？
           if (name == 'JUMPI') {
-            links.add(i)
+            links.add(i)  // JUMPI全控制
           } else {
             marker.fullControl = marker.fullControl.filter(x => pc!= x)
             assert(this.condition.fullControls[pc])
-            marker.fullControl = [
+            marker.fullControl = [  // ？
               ...new Set([
                 ...marker.fullControl,
                 ...this.condition.fullControls[pc]
@@ -56,6 +56,7 @@ class Cache {
     return [...links] 
   }
 
+  // 获取依赖：分析是否数据依赖MLOAD/SLOAD的值?
   analyzeExp(symbol, trackingPos, endPoint, epIdx) {
     const workStack = [symbol]
     let mloads = []
@@ -65,16 +66,17 @@ class Cache {
       const symbol = workStack.pop()
       switch (symbol[1]) {
         case 'MLOAD': {
-          const subEpSize = symbol[5][1].toNumber()
-          const subEp = endPoint.sub(subEpSize)
+          const subEpSize = symbol[5][1].toNumber() // ep.size()
+          const subEp = endPoint.sub(subEpSize) // 取ep的前subEpSize个
           try {
-            // Optimize load size
-            assert(symbol[3][1].toNumber() % 0x20 == 0)
-            const variable = new LocalVariable(symbol[2], subEp)
+            // Optimize load size 优化负载大小
+            assert(symbol[3][1].toNumber() % 0x20 == 0) // size：BN(32)
+            const variable = new LocalVariable(symbol[2], subEp)  // memLoc
             mloads.push(variable)
             /// MLOAD Loc 
             const trackingPos = subEp.stack.size() - 1
             const epIdx = subEpSize - 1
+            // 递归依赖分析
             const t = this.analyzeExp(symbol[2], trackingPos, endPoint, epIdx)
             mloads = [...mloads, ...t.mloads]
             sloads = [...sloads, ...t.sloads]
@@ -82,7 +84,6 @@ class Cache {
             this.stats.success.mloads ++;
           } catch (e) {
             // console.error(e)
-            // 多余？
             const variable = new BlindVariable()
             mloads.push(variable)
             /// MLOAD Loc 
@@ -138,7 +139,7 @@ class Cache {
     const subEp = endPoint.sub(epIdx + 1)
     const assignment = new LocalAssignment(subEp, trackingPos)
     const epIndexes = [...assignment.epIndexes, epIdx]
-    links = new Set([...links, ...this.controlLinks(epIndexes, subEp)])
+    links = new Set([...links, ...this.controlLinks(epIndexes, subEp)]) // JUMPI操作码全控制本身pc？
     return { mloads, sloads , links: [...links] }
   }
 
@@ -159,6 +160,8 @@ class Cache {
       const call = {}
       const end = {}
       const { ep, trace } = endPoint
+      // mstore/store
+      // 获取依赖关系？opi数据依赖于opj，递归opj是否依赖于其他数据
       trace.ts.forEach(({ t, epIdx, kTrackingPos, vTrackingPos }) => {
         const entries = {
           'MSTORE': [LocalVariable, mstore],
@@ -177,7 +180,7 @@ class Cache {
             const variable = new Variable(loc, subEp)
             const expression = ['symbol', name, loc, value]
             store[epIdx] = { key: variable, sloads, mloads, links, expression }
-            if (name == 'MSTORE') {
+            if (name == 'MSTORE') { // 未判断const？
               this.stats.success.mstores ++
             } else {
               this.stats.success.sstores ++
@@ -204,10 +207,11 @@ class Cache {
         }
       })
 
+      // 控制依赖 branch/end/call
       ep.forEach(({ t, opcode: { name }, pc, stack }, epIdx) => {
         switch (name) {
           case 'JUMPI': {
-            const trackingPos = stack.size() - 2
+            const trackingPos = stack.size() - 2  // JUMPI的条件索引
             const symbol = stack.get(trackingPos)
             const { mloads, sloads, links } = this.analyzeExp(symbol, trackingPos, endPoint, epIdx)
             branch[epIdx] = { mloads, sloads, links, expression: symbol }

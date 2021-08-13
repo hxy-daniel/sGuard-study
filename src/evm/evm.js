@@ -70,7 +70,7 @@ class Evm {
         ep.add({ opcode: { ...opcode, opVal: this.bin[pc] }, pc })
         
         switch (name) {
-          case 'PUSH': {  // 为考虑PUSH2-PUSH32
+          case 'PUSH': {  // 未考虑PUSH2-PUSH32
             const dataLen = this.bin[pc] - 0x5f // ? 96 - 95 = 1
             const data = this.bin.slice(pc + 1, pc + 1 + dataLen).toString('hex') // bin:[96(PUSH), 128(80), ...]获取PUSH操作后的数据值（128->80 十进制转十六进制）
             stack.push(['const', new BN(data, 16)]) // ep.stack存16进制大数
@@ -202,7 +202,7 @@ class Evm {
               stack.push(trace.memValueAt(memLoc))
               break
             }
-            // 此合约不执行
+            // 此合约不执行？
             stack.push(['symbol', name, memLoc, size, traceSize, epSize]) // 即使操作数是具体的，MLOAD？/SLOAD是符号值，维护内存或存储器的具体内容并非易事。例如，从storage中加载地址0x00中的值将产生符号值SLOAD(0x00)，将storage地址0x00处的值增加6将产生符号值ADD(SLOAD(0x00),0x06)。
             break
           }

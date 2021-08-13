@@ -62,17 +62,17 @@ class Scanner {
   scan() {
     let ret = []
     let nvuls = Object.keys(this.vuls).length
-    const bug = { nvuls: 3, cvuls: 1 }
+    const bug = { nvuls: 3, cvuls: 1 }  // 参数写死了，可能需要完善
 
     // Build tree here and pass to bug detector 
     const { mem: { calls }, endPoints } = this.cache
     const tree = new Tree(this.cache)
     let ctrees = 0
-    let ntrees = calls.reduce((prev, call) => {
+    let ntrees = calls.reduce((prev, call) => { // calls中非空的数量？
       return prev + toPairs(call).length
     }, 0)
     calls.forEach((call, endPointIdx) => {
-      toPairs(call).forEach(([epIdx, value]) => {
+      toPairs(call).forEach(([epIdx, value]) => { // 下标，值
         process.send && process.send({ bug: { ctrees, ntrees }})
         tree.build(endPointIdx, epIdx, value)
         ctrees ++
