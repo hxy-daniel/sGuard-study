@@ -24,11 +24,11 @@ class Reentrancy {
     while (stack.length) {
       const item = stack.pop()
       if (item.name == 'FunctionDefinition') {
-        const { stateMutability, functionSelector, implemented } = item.attributes
+        const { stateMutability, functionSelector, implemented } = item.attributes  // 状态可变性:nonpayable functionSelector:计算的 implemented:true
         if (['payable', 'nonpayable'].includes(stateMutability) && implemented) {
           const [s, l] = item.src.split(':').map(x => parseInt(x))
           const code = this.srcmap.source.slice(s, s + l)
-          const open = code.split('{')[0].split(')')[0]
+          const open = code.split('{')[0].split(')')[0] // "function main(uint x"
           const frag = {
             range: [s, s + open.length + 1],
             operands: [],
@@ -49,7 +49,7 @@ class Reentrancy {
     const targets = ['ADD', 'SUB', 'MUL', 'EXP', 'DIV']
     tree.root.node.childs.forEach(call => {
       const dnodes = call.traverse(({ node: { me } }) => formatSymbol(me).includes('SSTORE'))
-      const found = dnodes.find(dnode => {
+      const found = dnodes.find(dnode => {  // ?
         if (dnode.node.endPointIdx != call.node.endPointIdx) return false
         if (parseInt(dnode.node.epIdx) < parseInt(call.node.epIdx)) return false
         return true
@@ -62,7 +62,7 @@ class Reentrancy {
         })
         dnodes.forEach(({ node: { me } }) => {
           if (me[1] == 'EQ') {
-            let selector = me[2][1].toString(16)
+            let selector = me[2][1].toString(16)  // 54190677
             while (selector.length < 8) selector = `0${selector}`
             selectors.add(selector)
             return

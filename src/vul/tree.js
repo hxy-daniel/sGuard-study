@@ -5,7 +5,7 @@ const { DNode } = require('../analyzer')
 class Tree {
 
   constructor(cache) {
-    this.root = new DNode(['symbol', 'root'], 0, 0, 0)
+    this.root = new DNode(['symbol', 'root'], 0, 0, 0)  // symbol pc endPointIdx epIdx 
     this.cache = cache
   }
 
@@ -34,7 +34,7 @@ class Tree {
       const bug = { stack: stack.length, visited: visited.size }
       process.send && process.send({ bug })
       directParent.node.childs.push(dnode)
-      links.forEach(epIdx => {
+      links.forEach(epIdx => {    // 遍历links向stack添加元素
         const key = this.toKey(endPointIdx, epIdx)
         if (!visited.has(key)) {
           visited.add(key)
@@ -48,13 +48,13 @@ class Tree {
       })
       const mstore = mstores[endPointIdx]
       const mloadStack = [...mloads]
-      while (mloadStack.length) {
+      while (mloadStack.length) { // 遍历
         const mload = mloadStack.pop()
-        const pairs = toPairs(mstore).reverse()
-        for (let i = 0; i < pairs.length; i++) {
+        const pairs = toPairs(mstore).reverse() // 键值对转Set数组[[key, value]] [mstoreEpIdx, value]
+        for (let i = 0; i < pairs.length; i++) {  // 相当于遍历mstore
           const [mstoreEpIdx, value] = pairs[i]
           if (parseInt(mstoreEpIdx) < parseInt(epIdx)) {
-            if (mload.eq(value.key)) {
+            if (mload.eq(value.key)) {  // value.key:LocalVariable
               const key = this.toKey(endPointIdx, mstoreEpIdx)
               if (!visited.has(key)) {
                 visited.add(key)

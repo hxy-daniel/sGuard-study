@@ -61,8 +61,8 @@ class Scanner {
 
   scan() {
     let ret = []
-    let nvuls = Object.keys(this.vuls).length
-    const bug = { nvuls: 3, cvuls: 1 }  // 参数写死了，可能需要完善
+    let nvuls = Object.keys(this.vuls).length // 漏洞种类数量
+    const bug = { nvuls: 3, cvuls: 1 }  // 参数写死了，可能需要完善 cvuls：已扫描的bug类？
 
     // Build tree here and pass to bug detector 
     const { mem: { calls }, endPoints } = this.cache
@@ -75,7 +75,7 @@ class Scanner {
       toPairs(call).forEach(([epIdx, value]) => { // 下标，值
         process.send && process.send({ bug: { ctrees, ntrees }})
         tree.build(endPointIdx, epIdx, value)
-        ctrees ++
+        ctrees ++ // callTree？
       })
     })
 
@@ -83,11 +83,11 @@ class Scanner {
     for (const k in this.vuls) {
       process.send && process.send({ bug })
       ret = ret.concat(this.vuls[k].scan(tree, endPoints))
-      bug.cvuls ++
+      bug.cvuls ++  // 已扫描的bug类？
     }
     process.send && process.send({ bug })
     if (ret.length) {
-      ret = ret.concat(this.findInheritance())
+      ret = ret.concat(this.findInheritance())  // 最后添加合约是否is其他合约操作符
     }
     return ret 
   }

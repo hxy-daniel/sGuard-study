@@ -70,10 +70,11 @@ forEach(jsonOutput.contracts, (contractJson, full) => { // 遍历合约列表 fu
   const cache = new Cache(condition, endPoints, srcmap) // 处理计算mem/成功失败stats数据
   process.send && process.send({ duration: { dependencyAt: Date.now() } })
   const scanner = new Scanner(cache, srcmap, AST)
-  const uncheckOperands = scanner.scan()
+  const uncheckOperands = scanner.scan()  // 获取包含指定运算的操作符相关信息 fragments:[{operand:[{},{}],operator:'+=',range:[],selected:true}]
   /* Bug found */
+  // 判断是否包含整型/重入操作符
   const operators = uncheckOperands.map(({ operator }) => operator)
-  const integer = !!operators.find(x => ['--', '-=', '-', '+', '++', '+=', '*', '*=', '/', '/=', '**'].includes(x))
+  const integer = !!operators.find(x => ['--', '-=', '-', '+', '++', '+=', '*', '*=', '/', '/=', '**'].includes(x)) // !! 非空，非未定义，非空串
   const reentrancy = !!operators.find(x => ['lock:function'].includes(x))
   process.send && process.send({ bug: { integer, reentrancy }})
   /* Patch */

@@ -5,11 +5,16 @@ class SRCMap {
   constructor(srcmap, source, bin) {
     assert(source && srcmap && bin)
     this.source = source
-    this.srcmap = this.decompress(srcmap)
+    this.srcmap = this.decompress(srcmap) // 解压
     this.pcInst = this.pcToInst(bin)
   }
 
-  toSL(pc) {
+  /**
+   * @description 根据pc获取s,l
+   * @param {*} pc 
+   * @returns 
+   */
+  toSL(pc) {  
     const inst = this.pcInst[pc]
     if (!inst) return { txt: '', line: -1 }
     return this.srcmap[inst]
@@ -25,6 +30,7 @@ class SRCMap {
     }
   }
 
+  // [pc:inst, ...]
   pcToInst(bin) {
     let pc = 0
     let inst = 0
@@ -32,7 +38,7 @@ class SRCMap {
     while (pc < bin.length) {
       const opcode = bin[pc]
       ret[pc] = inst
-      if (opcode >= 0x60 && opcode <= 0x7f) {
+      if (opcode >= 0x60 && opcode <= 0x7f) { // PUSH操作
         pc += opcode - 0x5f
       }
       pc += 1
@@ -41,6 +47,11 @@ class SRCMap {
     return ret  
   }
 
+  /**
+   * @description 解压源映射
+   * @param {*} srcmap 
+   * @returns 
+   */
   decompress(srcmap) {
     return srcmap
       .split(';')
