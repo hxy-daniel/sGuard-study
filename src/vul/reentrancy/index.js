@@ -61,7 +61,7 @@ class Reentrancy {
           return eqReg.test(sym) || sym == 'LT(CALLDATASIZE,4)'
         })
         dnodes.forEach(({ node: { me } }) => {
-          if (me[1] == 'EQ') {
+          if (me[1] == 'EQ') {  // ？
             let selector = me[2][1].toString(16)  // 54190677
             while (selector.length < 8) selector = `0${selector}`
             selectors.add(selector)

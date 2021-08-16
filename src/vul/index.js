@@ -19,6 +19,7 @@ class Scanner {
     }
   }
 
+  // 根据长度随机生成字符串,范围[33-126]
   keyByLen(len) {
     return Array(len).fill(0).map(x => String.fromCharCode(random(33, 126))).join('')
   }
@@ -92,6 +93,7 @@ class Scanner {
     return ret 
   }
 
+  // 修补bug
   fix({ bugFixes, source, wrappers }) {
     if (isEmpty(bugFixes)) return this.srcmap.source
     for (const _ in bugFixes) {
@@ -99,13 +101,17 @@ class Scanner {
         source = source.replace(key, bugFixes[key])
       }
     }
+    // 根据类型从模板中获取相应函数并用view替换对应数据，实现修补bug的合约函数
     const check = this.template.loads([...wrappers]).join('\n\n')
-    const lines = check.split('\n').map(l => `  ${l}`).join('\n')
+    const lines = check.split('\n').map(l => `  ${l}`).join('\n') // 完善格式，增加tab空格
     const safeCheck = ['contract sGuard{\n', lines, '\n}'].join('')
-    const guard = [safeCheck, source].join('\n')
+    const guard = [safeCheck, source].join('\n')  // 合并sGuard合约和修补bug合约
     return guard
   }
 
+  // 计算bugFixes[key/'6@=g'K.UH"3U'] = check/'counter = add_uint256(counter, 1)'
+  // wrappers:[name/'add_uint256']
+  // 新source
   generateBugFixes(pairs) {
     let source = this.srcmap.source
     const bugFixes = {}
@@ -118,17 +124,18 @@ class Scanner {
         for (const pidx in pairs) {
           if (idx == pidx) continue
           const range = pairs[pidx].range
-          if (outerRange[0] <= range[0] && range[1] <= outerRange[1]) {
+          if (outerRange[0] <= range[0] && range[1] <= outerRange[1]) { // 外range是否包含内range
             containOtherRange = true
             break
           }
         }
         if (!containOtherRange) {
           sortedPairs.push(pairs[idx])
-          pairs.splice(idx, 1)
+          pairs.splice(idx, 1)  // 删除一个元素
         }
       }
     }
+    // [252,264] [237,242] [157,178] [54,68]
     sortedPairs.forEach(pair => {
       const { range, operands, operator, resultType } = pair
       let ops = []
@@ -140,7 +147,7 @@ class Scanner {
         const isInt = operand.type.startsWith('int')
         return len == 1 && (isUint || isInt)
       }) || {}
-      const { type } = pivot
+      const { type } = pivot  // 获取左标识符数据类型uint56
       switch (operator) {
         case '--': {
           name = `sub_${type}`
@@ -168,8 +175,8 @@ class Scanner {
         }
         case '+=': {
           name = `add_${type}`
-          ops = operands.map(({ range }) => source.slice(range[0], range[1])) 
-          check = `${ops[0]} = ${name}(${ops.join(', ')})`
+          ops = operands.map(({ range }) => source.slice(range[0], range[1])) // ["counter","1",]
+          check = `${ops[0]} = ${name}(${ops.join(', ')})` // "counter = add_uint256(counter, 1)"
           break
         }
         case '+': {

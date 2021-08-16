@@ -81,6 +81,6 @@ forEach(jsonOutput.contracts, (contractJson, full) => { // 遍历合约列表 fu
   const bugFixes = scanner.generateBugFixes(uncheckOperands)
   process.send && process.send({ duration: { bugAt: Date.now() }})
   const guard = scanner.fix(bugFixes)
-  fs.writeFileSync(fixedFile, guard, 'utf8')
+  fs.writeFileSync(fixedFile, guard, 'utf8')  // 生成修补的合约文件
   process.send && process.send({ duration: { patchAt: Date.now() }})
 })
