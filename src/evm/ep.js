@@ -46,6 +46,7 @@ class Ep {
     return ep
   }
 
+  // fixed-point算法？
   distance(pc) {  // pc为JUMPI的pc(序号)
     let jp = 0 // jumpi
     let ams = new Set() // assignment 赋值
