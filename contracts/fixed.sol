@@ -32,4 +32,24 @@ contract Fund  is sGuard {
       dontFixMe ++;
     }
   }
+
+  function transfer(
+    uint x, uint y,
+    uint z, uint m, uint n
+  ) {
+    while (x < 100) {
+      x = add_uint256(y, 1);
+      if (y < 100) {
+        y = add_uint256(z, 1);
+        if (z < 100) {
+          z = add_uint256(m, 1);
+        } else {
+          m = add_uint256(n, 1);
+        }
+      } else {
+        n = add_uint256(x, 1);
+      }
+    }
+    msg.sender.send(x);
+  }
 }

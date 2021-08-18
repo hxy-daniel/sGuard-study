@@ -14,4 +14,24 @@ contract Fund {
       dontFixMe ++;
     }
   }
+
+  function transfer(
+    uint x, uint y,
+    uint z, uint m, uint n
+  ) {
+    while (x < 100) {
+      x = y + 1;
+      if (y < 100) {
+        y = z + 1;
+        if (z < 100) {
+          z = m + 1;
+        } else {
+          m = n + 1;
+        }
+      } else {
+        n = x + 1;
+      }
+    }
+    msg.sender.send(x);
+  }
 }

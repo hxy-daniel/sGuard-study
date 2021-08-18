@@ -47,7 +47,7 @@ class Ep {
   }
 
   // fixed-point算法？
-  distance(pc) {  // pc为JUMPI的pc(序号)
+  distance(pc) {  // pc为JUMPI的pc(序号) 
     let jp = 0 // jumpi
     let ams = new Set() // assignment 赋值
     let coveredJp = new Set([pc]) // nested jumpi 嵌套JUMPI
@@ -58,18 +58,18 @@ class Ep {
     // count assignments between two jumpis
     for (let i = 0; i < this.ep.length - 1; i ++) {
       const { pc: coveredPc, opcode: { name }, stack } = this.ep[i];
-      if (pc == coveredPc) jp ++
-      if (jp > 0) {
+      if (pc == coveredPc) jp ++  // 计算循环开始至结束赋值语句
+      if (jp > 0) { // 此合约不执行
         switch (name) {
           case 'SWAP': {
             const value = stack.get(stack.size() - 1)
-            if (value[0] == 'const') break
+            if (value[0] == 'const') break  // 实现二：特殊情况下不计算，赋值语句右边的表达式是常量
             ams.add(coveredPc)
             break
           }
           case 'SSTORE': {
             const value = stack.get(stack.size() - 2)
-            if (value[0] == 'const') break
+            if (value[0] == 'const') break  // 实现二：特殊情况下不计算，赋值语句右边的表达式是常量
             ams.add(coveredPc)
             break
           }
@@ -77,7 +77,7 @@ class Ep {
             const loc = stack.get(stack.size() - 1)
             const value = stack.get(stack.size() - 2)
             if (loc[0] == 'const' && loc[1].toNumber() < 0x80) break
-            if (value[0] == 'const') break
+            if (value[0] == 'const') break  // 实现二：特殊情况下不计算，赋值语句右边的表达式是常量
             ams.add(coveredPc)
             break
           }

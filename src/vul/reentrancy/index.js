@@ -47,7 +47,7 @@ class Reentrancy {
     const selectors = new Set()
     const checkPoints = {}
     const targets = ['ADD', 'SUB', 'MUL', 'EXP', 'DIV']
-    tree.root.node.childs.forEach(call => {
+    tree.root.node.childs.forEach(call => { // 论文算法4
       const dnodes = call.traverse(({ node: { me } }) => formatSymbol(me).includes('SSTORE'))
       const found = dnodes.find(dnode => {  // ?
         if (dnode.node.endPointIdx != call.node.endPointIdx) return false
@@ -56,7 +56,7 @@ class Reentrancy {
       })
       if (found) {
         const dnodes = this.firstMeet(call, ({ node: { me } }) => {
-          const eqReg = /EQ\([0-f]{7,8},/
+          const eqReg = /EQ\([0-f]{7,8},/ // ?
           const sym = formatSymbol(me)
           return eqReg.test(sym) || sym == 'LT(CALLDATASIZE,4)'
         })
