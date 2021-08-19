@@ -70,7 +70,7 @@ class Cache {
           const subEp = endPoint.sub(subEpSize) // 取ep的前subEpSize个
           try {
             // Optimize load size 优化负载大小
-            assert(symbol[3][1].toNumber() % 0x20 == 0) // size：BN(32)
+            assert(symbol[3][1].toNumber() % 0x20 == 0) // size：BN(32) 0x20可能跟过度近似有关
             const variable = new LocalVariable(symbol[2], subEp)  // memLoc
             mloads.push(variable)
             /// MLOAD Loc 
