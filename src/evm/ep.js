@@ -73,6 +73,7 @@ class Ep {
             ams.add(coveredPc)
             break
           }
+          
           case 'MSTORE': {
             const loc = stack.get(stack.size() - 1)
             const value = stack.get(stack.size() - 2)

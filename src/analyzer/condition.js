@@ -80,7 +80,7 @@ class Condition {
       return dominators // 把支配赋值给后支配？
     })
     this.dominators = dominators
-    this.postdominators = postdominators
+    this.postdominators = postdominators  // key(节点)的后支配集
   }
 
   computeControls() {
